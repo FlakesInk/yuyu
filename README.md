@@ -29,7 +29,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-yuyu = { path = "." }
+yuyu = { git = "https://git.colorsky.fun/Color/yuyu" }
 ```
 
 ### Inline hook
