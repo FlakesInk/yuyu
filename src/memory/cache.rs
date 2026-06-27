@@ -1,3 +1,9 @@
+/// Flush the instruction cache for a given memory range.
+///
+/// # Safety
+///
+/// `target` must point to valid mapped memory and `length` must be within bounds.
+#[inline(never)]
 pub unsafe fn flush_icache(target: *mut u8, length: usize) -> bool {
     let start = target as usize;
     let end = start + length;
@@ -29,7 +35,7 @@ pub unsafe fn flush_icache(target: *mut u8, length: usize) -> bool {
     // If CTR_EL0.DIC is set, instruction cache invalidation to the point of
     // unification is not required for instruction to data coherence.
     if ((ctr_el0 >> 29) & 0x1) == 0x0 {
-        let icache_line_size = 4 << ((ctr_el0 >> 0) & 15);
+        let icache_line_size = 4 << (ctr_el0 & 15);
         let mut addr = start & !(icache_line_size - 1);
         while addr < end {
             unsafe {
