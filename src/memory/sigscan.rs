@@ -12,6 +12,7 @@
 //! | [`sig_scan_module`] | Readable regions whose pathname contains a given string |
 //! | [`sig_scan_range`] | A caller-specified `[addr, addr+size)` interval (unsafe) |
 //! | [`sig_scan_all`] | Same as [`sig_scan`], but returns every match |
+//! | [`sig_scan_module_phdr`] | Module located via `dl_iterate_phdr` (no maps dependency) |
 //!
 //! # Pattern format
 //!
@@ -547,6 +548,63 @@ pub fn sig_scan_all(sig: &Signature) -> Vec<usize> {
     }
 
     results
+}
+
+/// Search for the first match within a module located via `dl_iterate_phdr`.
+///
+/// Unlike [`sig_scan_module`], this does **not** rely on
+/// `/proc/self/maps` pathnames. It uses the dynamic linker's own bookkeeping
+/// (`dl_iterate_phdr`) to find the module, then scans its memory directly.
+///
+/// `module_name` is matched against the basename (last path component).
+pub fn sig_scan_module_phdr(sig: &Signature, module_name: &str) -> Option<usize> {
+    struct ModInfo {
+        name: String,
+        base: usize,
+        segs: Vec<(usize, usize)>, // (start, size) for each PT_LOAD segment
+    }
+    unsafe extern "C" fn cb(
+        info: *mut libc::dl_phdr_info,
+        _size: libc::size_t,
+        data: *mut libc::c_void,
+    ) -> libc::c_int {
+        let mi = unsafe { &mut *(data as *mut ModInfo) };
+        let name = unsafe { std::ffi::CStr::from_ptr((*info).dlpi_name) };
+        let bn = name.to_str().unwrap_or("").rsplit('/').next().unwrap_or("");
+        if bn != mi.name {
+            return 0;
+        }
+        mi.base = unsafe { (*info).dlpi_addr } as usize;
+        let phnum = unsafe { (*info).dlpi_phnum };
+        for i in 0..phnum {
+            let ph = unsafe { &*(*info).dlpi_phdr.add(i as usize) };
+            if ph.p_type != libc::PT_LOAD {
+                continue;
+            }
+            let start = mi.base + ph.p_vaddr as usize;
+            let size = ph.p_memsz as usize;
+            mi.segs.push((start, size));
+        }
+        1
+    }
+    let mut mi = ModInfo {
+        name: module_name.to_string(),
+        base: 0,
+        segs: Vec::new(),
+    };
+    unsafe {
+        libc::dl_iterate_phdr(Some(cb), &mut mi as *mut ModInfo as *mut libc::c_void);
+    }
+    if mi.base == 0 {
+        return None;
+    }
+    // Scan each PT_LOAD segment individually (avoids unmapped gaps between segments)
+    for (start, size) in &mi.segs {
+        if let Some(addr) = scan_region_safe(sig, *start, *size) {
+            return Some(addr);
+        }
+    }
+    None
 }
 
 #[cfg(test)]
