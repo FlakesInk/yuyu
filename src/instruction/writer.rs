@@ -40,7 +40,7 @@ pub fn can_b_rel(src: u64, dst: u64) -> bool {
     }
 }
 
-/// Generate a relative branch (B <label>) if within range.
+/// Generate a relative branch (`B <label>`) if within range.
 /// Returns the instruction sequence (2 x u32: B + NOP) or None if out of range.
 pub fn branch_relative(buf: &mut [u32], src: u64, dst: u64) -> Option<usize> {
     if can_b_rel(src, dst) {

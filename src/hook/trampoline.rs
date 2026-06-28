@@ -633,7 +633,7 @@ macro_rules! define_wrap {
         /// # Safety
         ///
         /// `func` must be a valid function pointer. The callback signatures
-        /// must match the original function's ABI (see [`HookChain*Callback`] types).
+        /// must match the original function's ABI (see `HookChain*Callback` types).
         #[inline]
         pub unsafe fn $name(
             func: *const libc::c_void,

@@ -1,6 +1,6 @@
 # Yuyu
 
-A lightweight ARM64 (AArch64) hooking library for Linux.
+A lightweight ARM64 (AArch64) hooking library for Linux / Android.
 
 <https://git.colorsky.fun/Color/yuyu>
 
@@ -16,11 +16,14 @@ A lightweight ARM64 (AArch64) hooking library for Linux.
   `fp_hook_wrap0`…`fp_hook_wrap12`
 - **Argument modification** — callbacks can read/write arguments and the
   return value, or skip the original function entirely
+- **Signature scanning** — AOB (Array of Bytes) pattern search across
+  readable memory regions, with full-byte (`??`) and nibble (`?X`/`?X`)
+  wildcards
 
 ## Platform
 
 - **Architecture**: AArch64 (ARM64) only
-- **OS**: Linux
+- **OS**: Linux / Android
 - **Rust**: edition 2024 (stable 1.85+)
 
 ## Quick start
@@ -104,6 +107,39 @@ unsafe {
 }
 ```
 
+### Signature scanning
+
+| Function | Scope |
+|----------|-------|
+| `sig_scan` | All readable regions in `/proc/self/maps` |
+| `sig_scan_module` | Readable regions with pathname containing a given string |
+| `sig_scan_range` | A caller-specified `[addr, addr+size)` interval (unsafe) |
+| `sig_scan_all` | Same as `sig_scan`, but returns every match |
+
+```rust
+use std::str::FromStr;
+use yuyu::memory::sigscan::{Signature, sig_scan, sig_scan_module, sig_scan_range};
+
+// Scan all readable memory
+let sig = Signature::from_str("FD 7B BF A9 FD 03 00 91").unwrap();
+if let Some(addr) = sig_scan(&sig) {
+    println!("Found at 0x{:X}", addr);
+}
+
+// Restrict to a module (case-insensitive substring match on pathname)
+let sig = Signature::from_str("FD 7B ?? A9 ?? 03 00 91").unwrap();
+if let Some(addr) = sig_scan_module(&sig, "libc.so") {
+    println!("Found in libc at 0x{:X}", addr);
+}
+
+// Restrict to a caller-specified address range
+unsafe {
+    if let Some(addr) = sig_scan_range(&sig, 0x7f000000, 0x1000) {
+        println!("Found at 0x{:X}", addr);
+    }
+}
+```
+
 ## Requirements for target functions
 
 Inline hooks overwrite the first 4 instructions (16 bytes). The target
@@ -124,8 +160,10 @@ Function-pointer hooks have no size requirement.
 ## Run the examples
 
 ```sh
-cargo run --example inline   # inline hook demo
-cargo run --example fp       # function-pointer hook demo
+cargo run --example inline    # inline hook demo
+cargo run --example fp        # function-pointer hook demo
+cargo run --example relocate  # relocation with conditional branch
+cargo run --example sigscan   # signature scanning demo
 ```
 
 ## Run the tests

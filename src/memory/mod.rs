@@ -1,4 +1,4 @@
-//! Memory management and code-patching utilities.
+//! Memory management, code-patching utilities, and signature scanning.
 //!
 //! # Modules
 //!
@@ -7,7 +7,9 @@
 //! | [`alloc`] | `mmap`-based executable memory allocation + global hook registry |
 //! | [`cache`] | Instruction / data cache maintenance (`flush_icache`) |
 //! | [`protect`] | `mprotect` wrappers and `hotpatch` for safe code overwriting |
+//! | [`sigscan`] | Signature/pattern scanning across readable memory regions |
 
 pub mod alloc;
 pub mod cache;
 pub mod protect;
+pub mod sigscan;

@@ -21,23 +21,23 @@ use crate::instruction::bit::{bits32, sign_extend};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum InstType {
-    /// Unconditional branch: B <offset>
+    /// Unconditional branch: `B <offset>`
     B = 0,
-    /// Conditional branch: B.<cond> <offset>
+    /// Conditional branch: `B.<cond> <offset>`
     BC = 1,
-    /// Branch with link: BL <offset>
+    /// Branch with link: `BL <offset>`
     BL = 2,
-    /// Form PC-relative address: ADR <Xd>, <label>
+    /// Form PC-relative address: `ADR <Xd>, <label>`
     ADR = 3,
-    /// Form PC-relative address to 4KB page: ADRP <Xd>, <label>
+    /// Form PC-relative address to 4KB page: `ADRP <Xd>, <label>`
     ADRP = 4,
-    /// Load 32-bit literal: LDR <Wt>, <label>
+    /// Load 32-bit literal: `LDR <Wt>, <label>`
     LDR32 = 5,
-    /// Load 64-bit literal: LDR <Xt>, <label>
+    /// Load 64-bit literal: `LDR <Xt>, <label>`
     LDR64 = 6,
-    /// Load signed word literal: LDRSW <Xt>, <label>
+    /// Load signed word literal: `LDRSW <Xt>, <label>`
     LDRSWLit = 7,
-    /// Prefetch literal: PRFM <prfop>, <label>
+    /// Prefetch literal: `PRFM <prfop>, <label>`
     PRFMLit = 8,
     /// Load SIMD 32-bit literal
     LDRSimd32 = 9,
@@ -45,13 +45,13 @@ pub enum InstType {
     LDRSimd64 = 10,
     /// Load SIMD 128-bit literal
     LDRSimd128 = 11,
-    /// Compare and branch on zero: CBZ <Rt>, <label>
+    /// Compare and branch on zero: `CBZ <Rt>, <label>`
     CBZ = 12,
-    /// Compare and branch on non-zero: CBNZ <Rt>, <label>
+    /// Compare and branch on non-zero: `CBNZ <Rt>, <label>`
     CBNZ = 13,
-    /// Test bit and branch on zero: TBZ <Rt>, #<imm>, <label>
+    /// Test bit and branch on zero: `TBZ <Rt>, #<imm>, <label>`
     TBZ = 14,
-    /// Test bit and branch on non-zero: TBNZ <Rt>, #<imm>, <label>
+    /// Test bit and branch on non-zero: `TBNZ <Rt>, #<imm>, <label>`
     TBNZ = 15,
     /// Ignored / unrecognized instruction (pass through).
     Ignore = 16,
@@ -170,20 +170,20 @@ pub fn classify_inst(inst: u32) -> (InstType, usize) {
 }
 
 /// Extract the signed 64-bit immediate offset from a B / BL instruction.
-/// - For B/BL: imm26 at bits [25:0], scaled by 4, sign-extended to 28 bits.
+/// - For B/BL: imm26 at bits `[25:0]`, scaled by 4, sign-extended to 28 bits.
 pub fn extract_b_imm(inst: u32) -> i64 {
     let imm26 = bits32(inst, 25, 0).unwrap_or(0) as u64;
     sign_extend(imm26 << 2, 28)
 }
 
 /// Extract the signed 64-bit immediate offset from a BC instruction.
-/// - For BC: imm19 at bits [23:5], scaled by 4, sign-extended to 21 bits.
+/// - For BC: imm19 at bits `[23:5]`, scaled by 4, sign-extended to 21 bits.
 pub fn extract_bc_imm(inst: u32) -> i64 {
     let imm19 = bits32(inst, 23, 5).unwrap_or(0) as u64;
     sign_extend(imm19 << 2, 21)
 }
 
-/// Extract destination register index (bits [4:0]).
+/// Extract destination register index (bits `[4:0]`).
 pub fn extract_rd(inst: u32) -> u32 {
     bits32(inst, 4, 0).unwrap_or(0)
 }
@@ -209,7 +209,7 @@ pub fn compute_adrp_target(inst_addr: u64, immhi: u64, immlo: u64) -> u64 {
     addr & 0xFFFF_FFFF_FFFF_F000
 }
 
-/// Extract the 19-bit immediate from LDR literal / CBZ / CBNZ (bits [23:5]).
+/// Extract the 19-bit immediate from LDR literal / CBZ / CBNZ (bits `[23:5]`).
 pub fn extract_imm19(inst: u32) -> u64 {
     bits32(inst, 23, 5).unwrap_or(0) as u64
 }
@@ -220,7 +220,7 @@ pub fn compute_ldr_target(inst_addr: u64, imm19: u64) -> u64 {
     (inst_addr as i64).wrapping_add(offset) as u64
 }
 
-/// Extract the 14-bit immediate from TBZ / TBNZ (bits [18:5]).
+/// Extract the 14-bit immediate from TBZ / TBNZ (bits `[18:5]`).
 pub fn extract_imm14(inst: u32) -> u64 {
     bits32(inst, 18, 5).unwrap_or(0) as u64
 }
