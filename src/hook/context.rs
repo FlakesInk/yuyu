@@ -33,6 +33,29 @@ pub const CHAIN_ITEM_STATE_READY: i8 = 1;
 pub const CHAIN_ITEM_STATE_BUSY: i8 = 2;
 
 // ---------------------------------------------------------------------------
+// Chain node identifier
+// ---------------------------------------------------------------------------
+
+/// Opaque token identifying a callback node in a hook chain.
+///
+/// Returned by [`super::chain::hook_chain_add`] / [`super::chain::Chain::add`].
+/// Pass it to [`super::chain::hook_chain_remove`] or
+/// [`super::chain::Chain::remove`] to drop the callback, or to
+/// [`super::chain::Chain::reload`] for hot-reload.
+///
+/// The token embeds a generation counter so that a stale token from a
+/// previously-removed slot is rejected — slots are never silently reused
+/// with the same identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(C)]
+pub struct ChainNodeId {
+    /// Slot index (0 .. [`HOOK_CHAIN_NUM`]).
+    pub index: u8,
+    /// Generation counter — bumped each time the slot is recycled.
+    pub generation: u8,
+}
+
+// ---------------------------------------------------------------------------
 // Hook argument structures (matching C ABI layouts)
 // ---------------------------------------------------------------------------
 
@@ -173,8 +196,8 @@ pub struct HookChain {
     /// Per-slot state: EMPTY, READY, or BUSY.
     pub states: [i8; HOOK_CHAIN_NUM],
 
-    /// Private padding for alignment.
-    pub _pad: [u8; 3],
+    /// Generation counters per slot (used by [`ChainNodeId`] for stale-token detection).
+    pub slot_generations: [u8; HOOK_CHAIN_NUM],
 
     /// User data pointers for each chain slot.
     pub udata: [*mut libc::c_void; HOOK_CHAIN_NUM],

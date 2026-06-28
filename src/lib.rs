@@ -130,6 +130,53 @@
 //! }
 //! ```
 //!
+//! ## Quick example — `Chain` object (hot-reloadable)
+//!
+//! ```rust,no_run
+//! use yuyu::hook::{Chain, ChainNodeId, HookFargs2};
+//! use std::ffi::c_void;
+//!
+//! extern "C" fn add(a: u64, b: u64) -> u64 { a + b }
+//!
+//! unsafe extern "C" fn before(fargs: *mut HookFargs2, _udata: *mut c_void) {
+//!     unsafe { (*fargs).arg0 += 1; }
+//! }
+//! unsafe extern "C" fn after(fargs: *mut HookFargs2, _udata: *mut c_void) {
+//!     unsafe { (*fargs).ret *= 2; }
+//! }
+//!
+//! unsafe {
+//!     let (mut chain, _node1) = Chain::wrap(
+//!         add as *const c_void, 2,
+//!         before as *mut c_void,
+//!         after as *mut c_void,
+//!         std::ptr::null_mut(),
+//!     ).expect("wrap failed");
+//!
+//!     assert_eq!(add(2, 3), 12); // 2 × (3 + 3)
+//!
+//!     // Add another callback pair — get a token back
+//!     let node: ChainNodeId = chain.add(
+//!         before as *mut c_void,
+//!         after as *mut c_void,
+//!         std::ptr::null_mut(),
+//!     ).expect("add failed");
+//!
+//!     // Hot-reload the second node
+//!     chain.reload(node,
+//!         std::ptr::null_mut(),   // no before
+//!         after as *mut c_void,   // keep after
+//!         std::ptr::null_mut(),
+//!     ).expect("reload failed");
+//!
+//!     // Remove it by token
+//!     chain.remove(node);
+//!     assert_eq!(chain.len(), 1);
+//!
+//!     // Chain auto-uninstalls when dropped
+//! }
+//! ```
+//!
 //! ## Quick example — `fp_hook` / `fp_unhook`
 //!
 //! ```rust,no_run
