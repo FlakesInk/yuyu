@@ -20,14 +20,12 @@ use crate::error::{HookError, HookResult};
 use crate::hook::context::*;
 use crate::memory::alloc;
 
-#[cfg(target_arch = "aarch64")]
 use crate::instruction::decoder::{ARM64_BTI_JC, ARM64_NOP};
 
 // ---------------------------------------------------------------------------
 // FP transit dispatch functions (separate from inline transit)
 // ---------------------------------------------------------------------------
 
-#[cfg(target_arch = "aarch64")]
 #[inline(never)]
 unsafe fn read_fp_chain_ptr() -> *mut FpHookChain {
     let chain: *mut FpHookChain;
@@ -38,7 +36,6 @@ unsafe fn read_fp_chain_ptr() -> *mut FpHookChain {
 }
 
 /// FP transit for 0 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_fp_transit0() -> u64 {
@@ -86,7 +83,6 @@ unsafe extern "C" fn _yuyu_fp_transit0() -> u64 {
 }
 
 /// FP transit for 1–4 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_fp_transit4(arg0: u64, arg1: u64, arg2: u64, arg3: u64) -> u64 {
@@ -138,7 +134,6 @@ unsafe extern "C" fn _yuyu_fp_transit4(arg0: u64, arg1: u64, arg2: u64, arg3: u6
 }
 
 /// FP transit for 5–8 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_fp_transit8(
@@ -208,7 +203,6 @@ unsafe extern "C" fn _yuyu_fp_transit8(
 }
 
 /// FP transit for 9–12 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_fp_transit12(
@@ -311,7 +305,6 @@ unsafe extern "C" fn _yuyu_fp_transit12(
 // FP transit function address lookup
 // ---------------------------------------------------------------------------
 
-#[cfg(target_arch = "aarch64")]
 fn fp_transit_func_for_argno(argno: i32) -> u64 {
     match argno {
         0 => _yuyu_fp_transit0 as *const () as u64,
@@ -325,7 +318,6 @@ fn fp_transit_func_for_argno(argno: i32) -> u64 {
 // FP trampoline header (same layout as inline, but for FpHookChain)
 // ---------------------------------------------------------------------------
 
-#[cfg(target_arch = "aarch64")]
 fn fp_chain_prepare_transit(chain: *mut FpHookChain, argno: i32) -> HookResult<()> {
     let chain_ref = unsafe { &mut *chain };
     let transit = &mut chain_ref.transit;
@@ -510,19 +502,13 @@ pub unsafe fn fp_hook_wrap(
     alloc::hook_mem_register(fp_addr, ptr)?;
 
     // Prepare transit trampoline
-    #[cfg(target_arch = "aarch64")]
+
     {
         if let Err(e) = fp_chain_prepare_transit(chain_ptr, argno) {
             alloc::hook_mem_unregister(fp_addr);
             alloc::hook_mem_free(ptr, chain_size);
             return Err(e);
         }
-    }
-    #[cfg(not(target_arch = "aarch64"))]
-    {
-        alloc::hook_mem_unregister(fp_addr);
-        alloc::hook_mem_free(ptr, chain_size);
-        return Err(HookError::BadRelo);
     }
 
     // Add first callback pair

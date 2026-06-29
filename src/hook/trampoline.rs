@@ -26,7 +26,6 @@ use crate::instruction::decoder::{ARM64_BTI_JC, ARM64_NOP};
 /// Must be called at the very beginning of a transit function, before any
 /// other code that might clobber X16. On aarch64, X16 (IP0) is a scratch
 /// register that the compiler avoids using in function prologues.
-#[cfg(target_arch = "aarch64")]
 #[inline(never)]
 unsafe fn read_chain_ptr() -> *mut HookChain {
     let chain: *mut HookChain;
@@ -49,7 +48,6 @@ unsafe fn read_chain_ptr() -> *mut HookChain {
 // 6. Returns the result in X0.
 
 /// Transit for 0 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_transit0() -> u64 {
@@ -97,7 +95,6 @@ unsafe extern "C" fn _yuyu_transit0() -> u64 {
 }
 
 /// Transit for 1–4 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_transit4(arg0: u64, arg1: u64, arg2: u64, arg3: u64) -> u64 {
@@ -149,7 +146,6 @@ unsafe extern "C" fn _yuyu_transit4(arg0: u64, arg1: u64, arg2: u64, arg3: u64) 
 }
 
 /// Transit for 5–8 register arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_transit8(
@@ -224,7 +220,6 @@ unsafe extern "C" fn _yuyu_transit8(
 /// transit header does not reposition stack arguments, so arg8–arg11
 /// correspond to the original caller's stack slots for the 9th–12th
 /// arguments.
-#[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
 #[inline(never)]
 unsafe extern "C" fn _yuyu_transit12(
@@ -356,7 +351,6 @@ fn transit_func_for_argno(argno: i32) -> u64 {
 /// [8]  transit_fn_lo      (.quad)
 /// [9]  transit_fn_hi
 /// ```
-#[cfg(target_arch = "aarch64")]
 #[inline(never)]
 pub(crate) fn hook_chain_prepare_transit(chain: *mut HookChain, argno: i32) -> HookResult<()> {
     let chain_ref = unsafe { &mut *chain };

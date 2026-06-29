@@ -60,16 +60,12 @@
 pub mod context;
 pub mod patch;
 
-#[cfg(target_arch = "aarch64")]
 pub mod fp;
 
-#[cfg(target_arch = "aarch64")]
 pub mod inline;
 
-#[cfg(target_arch = "aarch64")]
 pub mod chain;
 
-#[cfg(target_arch = "aarch64")]
 pub mod trampoline;
 
 // Re-export key types and functions for convenience
@@ -83,10 +79,8 @@ pub use context::{
     HookFargs10, HookFargs11, HookFargs12, HookLocal, fp_get_origin_func, wrap_get_origin_func,
 };
 
-#[cfg(target_arch = "aarch64")]
 pub use inline::{hook, hook_install, hook_prepare, hook_uninstall, unhook};
 
-#[cfg(target_arch = "aarch64")]
 pub use chain::{
     Chain, hook_chain_add, hook_chain_install, hook_chain_reload, hook_chain_remove,
     hook_chain_uninstall, hook_unwrap, hook_unwrap_remove, hook_wrap, hook_wrap0, hook_wrap1,
@@ -94,7 +88,6 @@ pub use chain::{
     hook_wrap10, hook_wrap11, hook_wrap12,
 };
 
-#[cfg(target_arch = "aarch64")]
 pub use fp::{
     fp_hook, fp_hook_unwrap, fp_hook_wrap, fp_hook_wrap0, fp_hook_wrap1, fp_hook_wrap2,
     fp_hook_wrap3, fp_hook_wrap4, fp_hook_wrap5, fp_hook_wrap6, fp_hook_wrap7, fp_hook_wrap8,

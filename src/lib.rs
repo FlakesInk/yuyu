@@ -251,7 +251,8 @@
 //! - Callback signatures **exactly** match the original function's ABI
 //! - No concurrent modification of hook chains
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(not(target_arch = "aarch64"))]
+compile_error!("This crate only supports aarch64.");
 pub mod error;
 pub mod hook;
 pub mod instruction;

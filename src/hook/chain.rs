@@ -265,19 +265,12 @@ impl Chain {
             return Err(e);
         }
 
-        #[cfg(target_arch = "aarch64")]
         {
             if let Err(e) = hook_chain_prepare_transit(chain_ptr, argno) {
                 alloc::hook_mem_unregister(origin);
                 alloc::hook_mem_free(ptr, chain_size);
                 return Err(e);
             }
-        }
-        #[cfg(not(target_arch = "aarch64"))]
-        {
-            alloc::hook_mem_unregister(origin);
-            alloc::hook_mem_free(ptr, chain_size);
-            return Err(HookError::BadRelo);
         }
 
         // First callback
